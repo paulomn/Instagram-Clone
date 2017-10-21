@@ -1,0 +1,218 @@
+<!DOCTYPE HTML>
+<html lang="pt-br">
+	<head>
+		<meta charset="UTF-8">
+
+		<title>Instagram Clone - WEB</title>
+		
+		<!-- JQuery -->
+		<script src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+		<!-- bootstrap - link cdn -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	
+		<!-- incluindo css -->
+		<link href="css/style.css" rel="stylesheet">
+
+		<script>
+			
+			$(document).ready(function(){
+
+				var apiAddress = 'http://localhost:8080/api';
+
+				////////////////////GET client////////////////////
+				LoadPosts();
+
+				function LoadPosts(){
+
+					//Create xmlhttprequest
+					var xhr = new XMLHttpRequest();
+					xhr.open('GET', apiAddress);
+
+					//After the end of response (the same verify state change)
+					xhr.onload = function(){
+						if (xhr.status = 200){
+							var data = $.parseJSON(xhr.responseText);
+
+							//Add image and comment button
+							for (i=0; i < data. length; i++){
+								
+								$('#container_timeline').append(
+									'<div class="publicacao"><span class="titulo">' +
+									data[i].title + 
+									'</span>' + 
+									'<img src="http://localhost:8080/uploads/' + data[i]._id + '" style="max-height: 200px; max-width: 200px;"/>' + 
+
+									//Showing comments
+									'<div class="comentarios" id="comments' + data[i]._id + '"></div>' +
+									///
+
+									'<div class="comentar">' +
+									'<input type="text" class="form-control input_comentario" placeholder="Add a comment" id="sendComment' + data[i]._id + '">' +
+									'<button class="btn btn-default btn_postagem" value="' + data[i]._id + '" type="button">Comment</button>' + 
+									'</div></div>'
+								);
+
+								//Since posts are printed, it is possible add comments
+								if (data[i].comments != undefined){
+									var comments = data[i].comments;
+
+									for(c = 0; c < comments.length; c++){
+
+										var appendHtml =	'<div class="txt_comentario">' +
+															'<button class="btn btn-default btn_remover_postagem" type="button" value="' + comments[c].id_comment + '">X</button>' +
+															comments[c].comment + 
+															'</div>'
+											
+										$('#comments' + data[i]._id).append(appendHtml);
+									}
+								}
+
+							}
+
+							////////////////////DELETE client////////////////////
+							$('.btn_remover_postagem').click(function(){ 
+								var commentId = this.value;
+								var deleteAddress =  apiAddress + '/' + commentId;
+
+								//Create xmlhttprequest
+								var xhr = new XMLHttpRequest();
+								xhr.open('DELETE', deleteAddress);
+								xhr.setRequestHeader('Content-type', 'application/json');
+
+								xhr.onload = function(){
+									if(xhr.status = 200){
+										window.location.href = '/home';
+									}
+								}
+
+								xhr.send();
+							});
+							////////////////////////////////////////////////////
+
+							////////////////////PUT client////////////////////
+							$('.btn_postagem').click(function(){ 
+								var commentId = this.value;
+								var commentTextId = 'sendComment' + commentId;
+								var comment = $('#' + commentTextId).val();	
+								var putAddress =  apiAddress + '/' + commentId;
+
+								//Create xmlhttprequest
+								var xhr = new XMLHttpRequest();
+								xhr.open('PUT', putAddress);
+								xhr.setRequestHeader('Content-type', 'application/json');
+
+								xhr.onload = function(){
+									if(xhr.status = 200){
+										window.location.href = '/home';
+									}
+
+								}
+
+								xhr.send(JSON.stringify({comment: comment}));
+							});
+							//////////////////////////////////////////////////
+
+						}
+					} 
+					xhr.send();
+				}
+				//////////////////////////////////////////////////
+
+				
+
+				////////////////////POST client////////////////////
+				$('#btn-publicar').click(function(){
+
+					console.log('Publish Event');
+
+					//create a data form
+					var formData = new FormData();
+					var file = document.getElementById('file').files[0];
+					var title = $('#title').val();
+
+					formData.append('file', file);
+					formData.append('title', title);
+
+					//create xmlhttprequest
+					var xhr = new XMLHttpRequest();
+
+					//verify state change
+					 xhr.onreadystatechange = function(){
+						
+					 	if (xhr.readyState == 4){
+					 		var res = xhr.responseText;	
+					 		$('#message').append(res);
+					 	}	
+					 }
+
+					xhr.open('POST', apiAddress);
+					xhr.send(formData);
+					
+				});
+				/////////////////////////////////////////////
+
+
+				$('#btn_incluir').click(function(){
+					$('#container_timeline').hide();
+					$('#container_form').show();
+				});
+
+				$('#btn-cancelar-publicacao').click(function(){
+					$('#container_timeline').show();
+					$('#container_form').hide();
+					return false;
+				});
+
+			});
+
+		</script>
+
+	</head>
+
+	<body>
+
+		<nav class="navbar navbar-default">
+			<div class="container">
+				<div class="col-md-12">
+					<div class="container-fluid">
+						<img alt="Instagram Clone - Versão WEB" src="images/logo2.jpg" class="logo2">
+						<img alt="Incluir" src="images/incluir.jpg" class="pull-right btn-incluir" id="btn_incluir">						
+					</div>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="col-md-2"></div>
+			<div class="col-md-8" id="container_timeline"></div>
+			
+		</div>
+
+
+		<div class="container" style="display:none" id="container_form">
+			<div class="panel panel-default">
+
+			<div class="panel-heading"><h4>Publicar uma foto</h4></div>
+			
+			<div class="panel-body">
+				
+				<div class="form-group">
+					<input type="file" name="file" id="file" class="form-control">
+				</div>
+
+				<div class="form-group">
+					<input type="text" name="title" id="title" class="form-control" placeholder="Titulo" autocomplete="off">
+				</div>
+
+				<div class="form-group">
+					<button class="btn btn-success" id="btn-publicar">Publicar</button>
+					<button class="btn btn-danger" id="btn-cancelar-publicacao">Cancelar</button>
+				</div>
+				<div id="message"></div>
+
+
+			</div>
+		</div>
+	</body>
+</html>
