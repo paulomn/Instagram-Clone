@@ -2,7 +2,7 @@
 var express = require('express'),
 	bodyParser = require('body-parser'),
 	mongodb = require('mongodb'),
-	objectId = require('mongodb').ObjectId;
+	objectId = require('mongodb').ObjectId,
 	multiParty = require('connect-multiparty'), //Capture multipart/form-data
 	mv = require('mv'), //Manipulate files
 	fileSystem = require('fs');
